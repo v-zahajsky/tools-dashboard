@@ -1,0 +1,14 @@
+{
+  "$schema": "../dashboard.schema.json",
+  "id": "zenhub-column-life",
+  "name": "ZenHub Column Life Tracker",
+  "type": "chrome-extension",
+  "category": "monitoring",
+  "icon": "Timer",
+  "tags": ["zenhub", "chrome", "tracking", "duration"],
+  "status": "active",
+
+  "chromeExtension": {
+    "repositoryUrl": "https://github.com/user/zenhub-column-life-chrome"
+  }
+}

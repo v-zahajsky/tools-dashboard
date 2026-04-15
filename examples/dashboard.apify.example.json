@@ -1,0 +1,19 @@
+{
+  "$schema": "../dashboard.schema.json",
+  "id": "github-sign-commits",
+  "name": "Commit Signing Checker",
+  "type": "apify",
+  "category": "security",
+  "icon": "ShieldCheck",
+  "tags": ["github", "gpg", "signing", "security", "compliance"],
+  "status": "active",
+
+  "apify": {
+    "actorId": "vladimir-zahajsky/github-sign-commits",
+    "outputConfig": {
+      "hasDataset": true,
+      "hasKvStore": true,
+      "kvHtmlReportKey": "report"
+    }
+  }
+}

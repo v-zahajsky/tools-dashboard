@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tools Dashboard Manifest",
+  "description": "Place this file as `dashboard.json` in the root of any tool project to register it with the Tools Dashboard. Fields marked 'auto-detected' are optional — the update-tools skill will fill them from existing config files if omitted.",
+  "type": "object",
+  "required": ["id", "name", "type", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "URL-safe slug, unique across all tools. Example: 'github-sign-commits'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable display name. Example: 'Commit Signing Checker'"
+    },
+    "description": {
+      "type": "string",
+      "description": "One-paragraph description of what the tool does. Auto-detected from README.md first heading/paragraph if omitted."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["apify", "google-apps-script", "chrome-extension", "manual", "webhook"],
+      "description": "Tool type. Determines which adapter the dashboard uses and which fields are required."
+    },
+    "category": {
+      "type": "string",
+      "enum": ["github-analysis", "hr-people", "security", "scrapers", "data-ingestion", "productivity", "monitoring"],
+      "description": "Dashboard category for grouping."
+    },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name. Examples: 'FileCode', 'Shield', 'Users', 'Database', 'Bell', 'Timer', 'Search', 'TrendingUp', 'ShieldCheck', 'FileSpreadsheet', 'GitCompare', 'Calendar', 'Globe'"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Free-form tags for search/filter."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "beta", "deprecated", "planned"],
+      "default": "active"
+    },
+    "owner": {
+      "type": "string",
+      "description": "Who maintains this tool."
+    },
+    "documentationUrl": {
+      "type": "string",
+      "description": "Link to external docs if any."
+    },
+
+    "apify": {
+      "type": "object",
+      "description": "Required when type='apify'. Auto-detected fields: actorId (from .actor/actor.json), defaultInput (from storage/key_value_stores/default/INPUT.json), inputSchema (from .actor/INPUT_SCHEMA.json).",
+      "properties": {
+        "actorId": {
+          "type": "string",
+          "description": "Apify actor ID ('username/actor-name'). Auto-detected from .actor/actor.json if omitted."
+        },
+        "defaultInput": {
+          "type": "object",
+          "description": "Pre-filled input for the Run dialog. Auto-detected from storage/key_value_stores/default/INPUT.json if omitted. NEVER include secrets here."
+        },
+        "outputConfig": {
+          "type": "object",
+          "description": "Tells the dashboard what outputs to expect. THIS CANNOT BE AUTO-DETECTED — you must specify it.",
+          "required": ["hasDataset"],
+          "properties": {
+            "hasDataset": {
+              "type": "boolean",
+              "description": "Whether the actor pushes data to the default dataset."
+            },
+            "hasKvStore": {
+              "type": "boolean",
+              "description": "Whether the actor writes to the default KV store."
+            },
+            "kvHtmlReportKey": {
+              "type": "string",
+              "description": "KV store key for the HTML report (e.g. 'report'). Dashboard will show a 'View Report' button."
+            },
+            "kvCsvReportKey": {
+              "type": "string",
+              "description": "KV store key for the CSV report (e.g. 'OUTPUT_CSV'). Dashboard will show a 'Download CSV' button."
+            },
+            "externalOutputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["label", "type"],
+                "properties": {
+                  "label": { "type": "string" },
+                  "url": { "type": "string" },
+                  "type": {
+                    "type": "string",
+                    "enum": ["google-sheet", "google-doc", "slack", "snowflake", "other"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "buildTag": { "type": "string", "default": "latest" },
+        "memoryMbytes": { "type": "number" },
+        "timeoutSecs": { "type": "number" }
+      }
+    },
+
+    "gas": {
+      "type": "object",
+      "description": "Required when type='google-apps-script'.",
+      "required": ["triggerInstructions"],
+      "properties": {
+        "scriptUrl": {
+          "type": "string",
+          "description": "URL to the Apps Script editor."
+        },
+        "triggerUrl": {
+          "type": "string",
+          "description": "Web app deployment URL for direct triggering (if deployed as web app)."
+        },
+        "triggerInstructions": {
+          "type": "string",
+          "description": "How to manually run this script (which function, prerequisites)."
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "url", "type"],
+            "properties": {
+              "label": { "type": "string" },
+              "url": { "type": "string" },
+              "type": { "type": "string", "enum": ["google-sheet", "google-doc"] }
+            }
+          }
+        }
+      }
+    },
+
+    "chromeExtension": {
+      "type": "object",
+      "description": "Optional when type='chrome-extension'. Permissions and hostPermissions are auto-detected from manifest.json.",
+      "properties": {
+        "installUrl": { "type": "string" },
+        "repositoryUrl": { "type": "string" }
+      }
+    },
+
+    "manual": {
+      "type": "object",
+      "description": "Required when type='manual'.",
+      "properties": {
+        "instructions": { "type": "string", "description": "Markdown instructions for how to use." },
+        "outputUrl": { "type": "string" }
+      }
+    },
+
+    "webhook": {
+      "type": "object",
+      "description": "Required when type='webhook'.",
+      "required": ["webhookUrl", "method"],
+      "properties": {
+        "webhookUrl": { "type": "string" },
+        "method": { "type": "string", "enum": ["GET", "POST"] },
+        "headers": { "type": "object" },
+        "bodyTemplate": { "type": "object" }
+      }
+    }
+  }
+}

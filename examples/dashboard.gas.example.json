@@ -1,0 +1,22 @@
+{
+  "$schema": "../dashboard.schema.json",
+  "id": "performance-review-consolidator",
+  "name": "Performance Review Consolidator",
+  "type": "google-apps-script",
+  "category": "hr-people",
+  "icon": "FileSpreadsheet",
+  "tags": ["performance-review", "google-sheets", "hr"],
+  "status": "active",
+
+  "gas": {
+    "scriptUrl": "https://script.google.com/d/SCRIPT_ID/edit",
+    "triggerInstructions": "Open the Apps Script editor, select `consolidateReviews()` function, and click Run. Requires access to all source spreadsheets listed in the SOURCE_SHEETS config.",
+    "outputs": [
+      {
+        "label": "Consolidated Review Sheet",
+        "url": "https://docs.google.com/spreadsheets/d/1Ev3VcjEbCigsDzDMpB47Sy8nni8vxV2T9XDYueSPgRg",
+        "type": "google-sheet"
+      }
+    ]
+  }
+}
