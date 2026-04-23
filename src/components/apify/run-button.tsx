@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Loader2 } from "lucide-react";
+import { Play, Loader2, HardDrive, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,9 +14,62 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { ApifyTool } from "@/types/tool";
+import { usePreferences } from "@/components/preferences-provider";
 import { toast } from "sonner";
 
+type Mode = "online" | "offline";
+
 export function RunButton({ tool }: { tool: ApifyTool }) {
+  const { preferences } = usePreferences();
+
+  const canOnline = Boolean(tool.actorId);
+  const canOffline = Boolean(tool.localPath);
+
+  if (!canOnline && !canOffline) {
+    return (
+      <Button disabled className="gap-2">
+        <Play className="h-4 w-4" />
+        Not runnable
+      </Button>
+    );
+  }
+
+  // Default mode — follow preferences, fall back to whichever is available.
+  const preferred: Mode = preferences.executionMode;
+  const defaultMode: Mode =
+    preferred === "online" && canOnline
+      ? "online"
+      : preferred === "offline" && canOffline
+        ? "offline"
+        : canOnline
+          ? "online"
+          : "offline";
+
+  return (
+    <div className="flex items-center gap-2">
+      {canOnline && (
+        <RunOnlineButton
+          tool={tool}
+          isPrimary={defaultMode === "online"}
+        />
+      )}
+      {canOffline && (
+        <RunOfflineButton
+          tool={tool}
+          isPrimary={defaultMode === "offline"}
+        />
+      )}
+    </div>
+  );
+}
+
+function RunOnlineButton({
+  tool,
+  isPrimary,
+}: {
+  tool: ApifyTool;
+  isPrimary: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState(
     JSON.stringify(tool.defaultInput, null, 2)
@@ -49,13 +102,9 @@ export function RunButton({ tool }: { tool: ApifyTool }) {
       const data = await res.json();
       toast.success(`Run started: ${data.run.id}`);
       setOpen(false);
-
-      // Force a page-level refresh to update run history
       window.location.reload();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to start run"
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to start run");
     } finally {
       setLoading(false);
     }
@@ -63,15 +112,22 @@ export function RunButton({ tool }: { tool: ApifyTool }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button className="gap-2" />}>
-        <Play className="h-4 w-4" />
-        Run Actor
+      <DialogTrigger
+        render={
+          <Button
+            variant={isPrimary ? "default" : "outline"}
+            className="gap-2"
+          />
+        }
+      >
+        <Cloud className="h-4 w-4" />
+        Run on Apify
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Run {tool.name}</DialogTitle>
+          <DialogTitle>Run {tool.name} on Apify</DialogTitle>
           <DialogDescription>
-            Review and edit the input JSON before running.
+            Starts a run in Apify cloud. Review and edit the input JSON first.
           </DialogDescription>
         </DialogHeader>
         <div className="my-2">
@@ -90,12 +146,61 @@ export function RunButton({ tool }: { tool: ApifyTool }) {
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Play className="h-4 w-4" />
+              <Cloud className="h-4 w-4" />
             )}
-            {loading ? "Starting..." : "Run Actor"}
+            {loading ? "Starting..." : "Run on Apify"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RunOfflineButton({
+  tool,
+  isPrimary,
+}: {
+  tool: ApifyTool;
+  isPrimary: boolean;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const handleRun = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tools/${tool.id}/run-local`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to start local run");
+      }
+      const data = await res.json();
+      toast.success(`Local run started: ${data.run.runId}`, {
+        description: `Log: ${data.run.logFile}`,
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to start local run"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      variant={isPrimary ? "default" : "outline"}
+      onClick={handleRun}
+      disabled={loading}
+      className="gap-2"
+    >
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <HardDrive className="h-4 w-4" />
+      )}
+      {loading ? "Starting..." : "Run Locally"}
+    </Button>
   );
 }

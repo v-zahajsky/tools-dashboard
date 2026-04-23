@@ -105,7 +105,16 @@ Present a summary of all detected and suggested fields. Clearly mark:
 - **Suggested** — inferred from context, user should verify
 - **Missing** — user needs to provide
 
-### 6. Write the dashboard.json
+### 6. Add the `local` section (optional, recommended)
+
+If the user wants to be able to run this tool from their local checkout (offline mode in the dashboard), add a `local` section:
+
+- **Apify tools** — just set `local.path` to the project's absolute directory path (e.g. `c:/_PROJEKTY/{name}`). `command`/`args` default to `apify run --purge`.
+- **Other tool types** — `local.path` + `local.command` are both required. Ask the user what command runs the tool locally (e.g. `npm`/`run start`, `python`/`main.py`).
+
+Skip the `local` section entirely if the tool is meant to be **online-only** (runs exclusively via Apify cloud).
+
+### 7. Write the dashboard.json
 
 After user confirms (or provides corrections), write `dashboard.json` to the project root. Include the `$schema` reference:
 
@@ -116,7 +125,7 @@ After user confirms (or provides corrections), write `dashboard.json` to the pro
 }
 ```
 
-### 7. Offer to run update-tools
+### 8. Offer to run update-tools
 
 After writing the manifest, ask: "Run `/update-tools` now to register this tool in the dashboard?"
 

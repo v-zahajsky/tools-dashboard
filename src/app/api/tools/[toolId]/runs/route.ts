@@ -11,6 +11,9 @@ export async function GET(
   if (!tool || tool.type !== "apify") {
     return NextResponse.json({ error: "Not an Apify tool" }, { status: 400 });
   }
+  if (!tool.actorId) {
+    return NextResponse.json({ runs: [] });
+  }
 
   try {
     const client = getApifyClient();
@@ -38,6 +41,12 @@ export async function POST(
   const tool = getToolById(toolId);
   if (!tool || tool.type !== "apify") {
     return NextResponse.json({ error: "Not an Apify tool" }, { status: 400 });
+  }
+  if (!tool.actorId) {
+    return NextResponse.json(
+      { error: "This tool has no online (Apify) variant configured." },
+      { status: 400 }
+    );
   }
 
   try {

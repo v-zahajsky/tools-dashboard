@@ -9,7 +9,7 @@ import { ExternalLink } from "lucide-react";
 export function ApifyAdapter({ tool }: { tool: ApifyTool }) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <RunButton tool={tool} />
         {tool.outputConfig.externalOutputs?.map((output, i) => (
           <a
@@ -25,12 +25,22 @@ export function ApifyAdapter({ tool }: { tool: ApifyTool }) {
         ))}
       </div>
 
-      <Separator />
+      {tool.localPath && (
+        <p className="text-xs text-muted-foreground">
+          Local checkout:{" "}
+          <code className="font-mono">{tool.localPath}</code>
+        </p>
+      )}
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Run History</h2>
-        <RunHistoryTable tool={tool} />
-      </div>
+      {tool.actorId && (
+        <>
+          <Separator />
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Run History</h2>
+            <RunHistoryTable tool={tool} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

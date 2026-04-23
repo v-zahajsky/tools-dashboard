@@ -20,10 +20,15 @@ The schema is defined in `c:/_PROJEKTY/tools-dashboard/dashboard.schema.json`. R
 
 #### type: "apify"
 - **`description`** — if missing, read the first paragraph from the project's `README.md`
-- **`apify.actorId`** — if missing, read `.actor/actor.json` and use the `name` field (format: `username/actor-name`)
+- **`apify.actorId`** — if missing, read `.actor/actor.json` and use the `name` field (format: `username/actor-name`). May be intentionally omitted for **local-only** tools (in that case `local.path` must be set).
 - **`apify.defaultInput`** — if missing, read `storage/key_value_stores/default/INPUT.json`. Remove any fields where `isSecret: true` in the input schema.
 - **`apify.inputSchema`** — always try to read from `.actor/INPUT_SCHEMA.json` or `.actor/input_schema.json` (case varies). Do NOT embed the full schema in tools.ts — set it to `null` (it can be fetched at runtime).
 - **`apify.outputConfig`** — CANNOT be auto-detected. If missing from `dashboard.json`, set `{ hasDataset: true, hasKvStore: false }` as safe default and add a `// TODO: verify outputConfig` comment.
+
+#### `local` section (any tool type)
+- **`local.path`** — if `dashboard.json` is found at `c:/_PROJEKTY/{name}/dashboard.json`, default to that directory's absolute path when `local` is present but `path` is omitted.
+- **`local.command` / `local.args`** — for apify tools, defaults to `apify run --purge` and is optional. For other tool types, both are required.
+- Map `local.path` → `localPath`, and `local.{command, args}` → `localCommand: { command, args }` on the generated tool entry.
 
 #### type: "google-apps-script"
 - **`description`** — if missing, read from `README.md` or the first comment block in `.gs` files
@@ -43,8 +48,9 @@ The schema is defined in `c:/_PROJEKTY/tools-dashboard/dashboard.schema.json`. R
 For each tool, verify:
 - `id` is unique across all tools
 - `type` has the required type-specific section (`apify`, `gas`, `chromeExtension`, etc.)
-- For Apify tools: `actorId` is resolved (either from dashboard.json or auto-detected)
+- For Apify tools: **at least one** of `actorId` (from dashboard.json or auto-detected) or `local.path` must be set. An entry with neither is invalid.
 - For GAS tools: `triggerInstructions` exists
+- For any tool that declares a `local` section: if `type !== "apify"`, `local.command` is required.
 
 Report any validation errors to the user before proceeding.
 

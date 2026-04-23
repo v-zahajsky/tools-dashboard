@@ -16,6 +16,12 @@ export interface Category {
   color: string;
 }
 
+// ---- Local execution ----
+export interface LocalCommand {
+  command: string;
+  args?: string[];
+}
+
 // ---- Base tool type ----
 export interface ToolBase {
   id: string;
@@ -28,6 +34,11 @@ export interface ToolBase {
   lastUpdated?: string;
   documentationUrl?: string;
   owner?: string;
+  // Path to local project checkout. When set, the tool can be run offline.
+  // For apify tools this defaults to `apify run` inside localPath if localCommand is not provided.
+  // For other tool types, localCommand is required alongside localPath.
+  localPath?: string;
+  localCommand?: LocalCommand;
 }
 
 // ---- Apify ----
@@ -80,7 +91,9 @@ export interface ApifyInputSchema {
 
 export interface ApifyTool extends ToolBase {
   type: "apify";
-  actorId: string;
+  // Optional — may be absent for local-only tools.
+  // At least one of `actorId` or `localPath` must be set.
+  actorId?: string;
   defaultInput: Record<string, unknown>;
   inputSchema?: ApifyInputSchema | null;
   outputConfig: ApifyOutputConfig;
@@ -134,6 +147,20 @@ export type ToolDefinition =
   | ChromeExtensionTool
   | ManualTool
   | WebhookTool;
+
+// ---- User preferences ----
+export interface Preferences {
+  // "online" = running a tool invokes the Apify cloud actor (when actorId is set)
+  // "offline" = running a tool spawns a local subprocess (when localPath is set)
+  executionMode: "online" | "offline";
+  // When true, tools that have only a local variant (no actorId) are hidden from the dashboard.
+  hideLocalOnly: boolean;
+}
+
+export const DEFAULT_PREFERENCES: Preferences = {
+  executionMode: "online",
+  hideLocalOnly: false,
+};
 
 // ---- Apify Run types ----
 export type ApifyRunStatus =

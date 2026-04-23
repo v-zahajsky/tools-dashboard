@@ -51,13 +51,34 @@
       "description": "Link to external docs if any."
     },
 
+    "local": {
+      "type": "object",
+      "description": "Optional. Lets the dashboard run this tool locally instead of (or in addition to) the cloud variant. Apify tools default to running `apify run` inside `path` if `command` is omitted. Non-apify tools must specify `command`.",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Absolute path (or path relative to c:/_PROJEKTY/) to the tool's local checkout. Example: 'c:/_PROJEKTY/github-sign-commits'."
+        },
+        "command": {
+          "type": "string",
+          "description": "Executable to invoke. Optional for apify tools (defaults to 'apify'). Required for other tool types. Example: 'npm', 'python', 'node'."
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Arguments passed to the command. Example for apify: ['run', '--purge']. Example for npm: ['run', 'start']."
+        }
+      }
+    },
+
     "apify": {
       "type": "object",
       "description": "Required when type='apify'. Auto-detected fields: actorId (from .actor/actor.json), defaultInput (from storage/key_value_stores/default/INPUT.json), inputSchema (from .actor/INPUT_SCHEMA.json).",
       "properties": {
         "actorId": {
           "type": "string",
-          "description": "Apify actor ID ('username/actor-name'). Auto-detected from .actor/actor.json if omitted."
+          "description": "Apify actor ID ('username/actor-name'). Optional — omit to make this a local-only tool (then `local.path` must be set). Auto-detected from .actor/actor.json if omitted."
         },
         "defaultInput": {
           "type": "object",
