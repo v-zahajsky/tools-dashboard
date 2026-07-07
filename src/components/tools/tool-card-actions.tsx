@@ -18,6 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ApifyTool, ToolDefinition } from "@/types/tool";
+import { hasCloudVariant } from "@/lib/apify-actor";
 import { toast } from "sonner";
 
 // Prevent clicks on action buttons from bubbling up to the stretched link
@@ -30,7 +31,7 @@ function stop(e: MouseEvent) {
 export function ToolCardActions({ tool }: { tool: ToolDefinition }) {
   if (tool.type !== "apify") return null;
   const apify = tool as ApifyTool;
-  const canOnline = Boolean(apify.actorId);
+  const canOnline = hasCloudVariant(apify);
   const canOffline = Boolean(apify.localPath);
   if (!canOnline && !canOffline) return null;
 

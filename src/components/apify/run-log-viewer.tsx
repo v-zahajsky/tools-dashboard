@@ -6,19 +6,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface RunLogViewerProps {
   runId: string;
+  source?: "cloud" | "local";
 }
 
-export function RunLogViewer({ runId }: RunLogViewerProps) {
+export function RunLogViewer({ runId, source = "cloud" }: RunLogViewerProps) {
   const [log, setLog] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const url =
+      source === "local"
+        ? `/api/local-runs/${runId}/log`
+        : `/api/runs/${runId}/log`;
 
     async function fetchLog() {
       try {
-        const res = await fetch(`/api/runs/${runId}/log`);
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch log");
         const text = await res.text();
         if (!cancelled) {
@@ -35,7 +40,7 @@ export function RunLogViewer({ runId }: RunLogViewerProps) {
     return () => {
       cancelled = true;
     };
-  }, [runId]);
+  }, [runId, source]);
 
   useEffect(() => {
     if (scrollRef.current) {

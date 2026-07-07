@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { ApifyTool } from "@/types/tool";
+import { hasCloudVariant } from "@/lib/apify-actor";
 import { usePreferences } from "@/components/preferences-provider";
 import { toast } from "sonner";
 
@@ -22,7 +23,7 @@ type Mode = "online" | "offline";
 export function RunButton({ tool }: { tool: ApifyTool }) {
   const { preferences } = usePreferences();
 
-  const canOnline = Boolean(tool.actorId);
+  const canOnline = hasCloudVariant(tool);
   const canOffline = Boolean(tool.localPath);
 
   if (!canOnline && !canOffline) {

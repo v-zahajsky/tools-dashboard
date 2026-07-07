@@ -9,7 +9,7 @@ import { usePreferences } from "@/components/preferences-provider";
 
 function isLocalOnly(tool: ToolDefinition): boolean {
   if (tool.type !== "apify") return false;
-  return Boolean(tool.localPath) && !tool.actorId;
+  return Boolean(tool.localPath) && !tool.actorId && !tool.actorName;
 }
 
 export function HomeContent() {

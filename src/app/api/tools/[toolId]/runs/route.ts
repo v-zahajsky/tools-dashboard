@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToolById } from "@/lib/registry";
 import { getApifyClient } from "@/lib/apify-client";
+import { resolveApifyActorId } from "@/lib/apify-actor";
 
 export async function GET(
   _request: NextRequest,
@@ -11,13 +12,14 @@ export async function GET(
   if (!tool || tool.type !== "apify") {
     return NextResponse.json({ error: "Not an Apify tool" }, { status: 400 });
   }
-  if (!tool.actorId) {
+  const actorId = resolveApifyActorId(tool);
+  if (!actorId) {
     return NextResponse.json({ runs: [] });
   }
 
   try {
     const client = getApifyClient();
-    const { items } = await client.actor(tool.actorId).runs().list({
+    const { items } = await client.actor(actorId).runs().list({
       limit: 20,
       desc: true,
     });
@@ -42,9 +44,14 @@ export async function POST(
   if (!tool || tool.type !== "apify") {
     return NextResponse.json({ error: "Not an Apify tool" }, { status: 400 });
   }
-  if (!tool.actorId) {
+  const actorId = resolveApifyActorId(tool);
+  if (!actorId) {
     return NextResponse.json(
-      { error: "This tool has no online (Apify) variant configured." },
+      {
+        error: tool.actorName
+          ? "APIFY_USERNAME is not set in .env.local — cannot resolve actor."
+          : "This tool has no online (Apify) variant configured.",
+      },
       { status: 400 }
     );
   }
@@ -54,7 +61,7 @@ export async function POST(
     const input = { ...tool.defaultInput, ...body.input };
 
     const client = getApifyClient();
-    const run = await client.actor(tool.actorId).start(input, {
+    const run = await client.actor(actorId).start(input, {
       memory: tool.memoryMbytes,
       timeout: tool.timeoutSecs,
       build: tool.buildTag || "latest",

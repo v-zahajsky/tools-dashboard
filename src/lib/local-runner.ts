@@ -6,6 +6,7 @@ import {
   statSync,
   readdirSync,
   readFileSync,
+  copyFileSync,
 } from "node:fs";
 import path from "node:path";
 import { ToolDefinition } from "@/types/tool";
@@ -83,6 +84,7 @@ export function startLocalRun(
 
   child.on("close", (code) => {
     log.write(`\n---\n[${new Date().toISOString()}] process exited with code ${code}\n`);
+    archiveHtmlReport(tool, plan.cwd, runId, log);
     log.end();
   });
   child.on("error", (err) => {
@@ -93,11 +95,39 @@ export function startLocalRun(
   return { runId, logFile, pid: child.pid };
 }
 
+function archiveHtmlReport(
+  tool: ToolDefinition,
+  cwd: string,
+  runId: string,
+  log: NodeJS.WritableStream
+): void {
+  if (tool.type !== "apify") return;
+  const key = tool.outputConfig.kvHtmlReportKey;
+  if (!key) return;
+  const sourceCandidates = [
+    path.join(cwd, "storage", "key_value_stores", "default", `${key}.html`),
+    path.join(cwd, "storage", "key_value_stores", "default", key),
+  ];
+  const source = sourceCandidates.find((p) => existsSync(p));
+  if (!source) {
+    log.write(`[archive] no HTML report found under ${sourceCandidates[0]}\n`);
+    return;
+  }
+  const dest = path.join(LOGS_DIR, `${runId}.report.html`);
+  try {
+    copyFileSync(source, dest);
+    log.write(`[archive] HTML report archived to ${dest}\n`);
+  } catch (err) {
+    log.write(`[archive] failed: ${err instanceof Error ? err.message : err}\n`);
+  }
+}
+
 export interface LocalRunSummary {
   runId: string;
   logFile: string;
   size: number;
   mtime: string;
+  hasReport: boolean;
 }
 
 export function listLocalRuns(toolId: string): LocalRunSummary[] {
@@ -109,14 +139,23 @@ export function listLocalRuns(toolId: string): LocalRunSummary[] {
     .map((f) => {
       const full = path.join(LOGS_DIR, f);
       const s = statSync(full);
+      const runId = f.replace(/\.log$/, "");
+      const reportFile = path.join(LOGS_DIR, `${runId}.report.html`);
       return {
-        runId: f.replace(/\.log$/, ""),
+        runId,
         logFile: full,
         size: s.size,
         mtime: s.mtime.toISOString(),
+        hasReport: existsSync(reportFile),
       };
     })
     .sort((a, b) => b.mtime.localeCompare(a.mtime));
+}
+
+export function readLocalRunReport(runId: string): string {
+  const file = path.join(LOGS_DIR, `${runId}.report.html`);
+  if (!existsSync(file)) throw new LocalRunError(`Report not found: ${runId}`);
+  return readFileSync(file, "utf8");
 }
 
 export function readLocalRunLog(runId: string): string {

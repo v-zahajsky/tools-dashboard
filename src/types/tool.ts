@@ -91,8 +91,11 @@ export interface ApifyInputSchema {
 
 export interface ApifyTool extends ToolBase {
   type: "apify";
-  // Optional — may be absent for local-only tools.
-  // At least one of `actorId` or `localPath` must be set.
+  // Either `actorName` (combined with APIFY_USERNAME env var) or full `actorId`
+  // ("username/actor-name") must be set for the tool to be runnable in the cloud.
+  // Local-only tools omit both and provide `localPath` instead.
+  // If both are set, `actorId` wins (explicit override).
+  actorName?: string;
   actorId?: string;
   defaultInput: Record<string, unknown>;
   inputSchema?: ApifyInputSchema | null;

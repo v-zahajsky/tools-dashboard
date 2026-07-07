@@ -63,7 +63,7 @@ function getVariantBadges(tool: ToolDefinition) {
   }> = [];
   if (tool.type === "apify") {
     const apify = tool as ApifyTool;
-    if (apify.actorId) {
+    if (apify.actorId || apify.actorName) {
       badges.push({
         key: "online",
         icon: Cloud,
